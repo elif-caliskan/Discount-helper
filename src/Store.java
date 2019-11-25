@@ -1,7 +1,7 @@
 
 public class Store {
 
-    public String storeId;
+    public int storeId;
     public double storeLatitude;
     public double storeLongitude;
     public String storeName;
@@ -14,7 +14,7 @@ public class Store {
         this.storeAddress =address;
     }
 
-    Store(String id, double latitude, double longitude, String name, String address) {
+    Store(int id, double latitude, double longitude, String name, String address) {
         this.storeLatitude = latitude;
         this.storeLongitude = longitude;
         this.storeName = name;
