@@ -15,196 +15,113 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 
-public class Server {
+public class Server extends Thread{
 
-	private static ServerSocket ss;
 	private static Socket s;
 	private static BufferedReader br;
 	private static InputStreamReader isr;
 	private static String message;
 	private static PrintWriter pw;	
+	boolean onMapPage = false;
 	static JSONParser parser = new JSONParser();
+	
+	Server(Socket socket) {
+        this.s = socket;
+        try {
+        	isr = new InputStreamReader(s.getInputStream());
+			br = new BufferedReader(isr);
+			pw = new PrintWriter(s.getOutputStream());
 
-	/**
-	 * 1) store ekleme
-	 * 2) 
-	 */
-	public static void main(String[] args) throws ParseException {
-
-		try {
-			ss = new ServerSocket(6000);
-
-			while(true) {
-
-				try {
-					System.out.println("message is :");
-					s = ss.accept();
-
-					System.out.println("message is2 :");
-
-					isr = new InputStreamReader(s.getInputStream());
-					br = new BufferedReader(isr);
-					message = br.readLine();
-
-					System.out.println(message);
-
-					GsonBuilder builder = new GsonBuilder(); 
-					builder.setPrettyPrinting(); 
-
-					Gson gson = builder.create(); 
-					Retailer retailer = gson.fromJson(message, Retailer.class);  
-					
-					//retailer
-
-					if(retailer.retailerName != null) {
-						System.out.print(retailer.retailerName);
-						if(retailer.retailerEmail != null) {
-
-							File filex = new File("users.json");
-							if(filex.length() == 0) {
-								try (FileWriter file = new FileWriter("users.json", true)) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
-									JSONArray jsonArray = new JSONArray();
+	@Override 
+	public void run() {
+		
+		while(true) {
+						
+			try {
+				System.out.println("message is :");
 
-									jsonArray.add(gson.toJson(retailer));
+				message = br.readLine();
 
-									file.write(jsonArray.toJSONString());
-									file.flush();
+				System.out.println(message);
+				String outMessage = "404";
 
-								}
-								catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
+				GsonBuilder builder = new GsonBuilder(); 
+				builder.setPrettyPrinting(); 
 
-							else {
-
-								Object obj = parser.parse(new FileReader("users.json"));
-								System.out.print("new signup");
-
-								JSONArray jsonArray = (JSONArray)obj;
-
-								jsonArray.add(gson.toJson(retailer));
-								try (FileWriter file = new FileWriter("users.json")) {
-
-
-									file.write(jsonArray.toJSONString());
-									file.flush();
-
-								}
-								catch (IOException e) {
-									e.printStackTrace();
-								}
-
-							}
-
-						} 
-
-						else {
-							Object obj = parser.parse(new FileReader("users.json"));
-
-							JSONArray jsonArray = (JSONArray) obj;
-
-							System.out.println("login :"+ jsonArray.get(0).toString());
-						}
-					}
-
-					Store store = gson.fromJson(message, Store.class);  
-					
-					//store
-
-					if(store.storeName != null) {
-						System.out.print(store.storeName);
-						if(store.storeId == -1) {
-
-							File filex = new File("stores.json");
-							if(filex.length() == 0) {
-								try (FileWriter file = new FileWriter("stores.json", true)) {
-
-
-									JSONArray jsonArray = new JSONArray();
-
-									jsonArray.add(gson.toJson(store));
-
-									file.write(jsonArray.toJSONString());
-									file.flush();
-
-								}
-								catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-
-							else {
-
-								Object obj = parser.parse(new FileReader("stores.json"));
-								System.out.print("new add store");
-
-								JSONArray jsonArray = (JSONArray)obj;
-
-								jsonArray.add(gson.toJson(store));
-								try (FileWriter file = new FileWriter("stores.json")) {
-
-
-									file.write(jsonArray.toJSONString());
-									file.flush();
-
-								}
-								catch (IOException e) {
-									e.printStackTrace();
-								}
-
-							}
-
-						} 
-
-						else {
-							Object obj = parser.parse(new FileReader("stores.json"));
-
-							JSONArray jsonArray = (JSONArray) obj;
-
-							System.out.println("store :"+ jsonArray.get(0).toString());
-						}
-					}
-
-					Discount discount = gson.fromJson(message, Discount.class);  
-
-					if(discount.discountProduct != null) {
-						System.out.print(discount.discountProduct);
-						try (FileWriter file = new FileWriter("discounts.json", true)) {
-
-							file.write(message);
-							file.flush();
-
-						} catch (IOException e) {
-							e.printStackTrace();
-						}
-					}
-
-
-					//Write JSON file
-
-					pw = new PrintWriter(s.getOutputStream());
-					pw.write(message);
-					pw.flush();
-					pw.close();
-					br.close();
+				Gson gson = builder.create(); 
+				
+				String first = message.substring(0, 3);
+				message = message.substring(3);
+				
+				if(first.equals("100")) {
+					outMessage = Retailer.createRetailer(message, parser, gson);
+					onMapPage = false;
 				}
-				catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				else if(first.contentEquals("101")) {
+					outMessage = Store.createStore(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("102")) {
+					outMessage = Discount.createDiscount(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("103")) {
+					outMessage = Retailer.login(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("104")) {
+					outMessage = Store.getAllStores(parser, gson);
+					onMapPage = true;
+				}
+				else if(first.equals("105")) {
+					outMessage = Store.getStoresOfRetailer(message, parser, gson);
+					onMapPage = true;
+				}
+				else if(first.equals("106")) {
+					outMessage = Discount.getDiscountOfStore(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("107")) {
+					outMessage = Discount.deleteDiscount(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("108")) {
+					outMessage = Store.deleteStore(message, parser, gson);
+					onMapPage = false;
+				}
+				else if(first.equals("109")) {
+					outMessage = Store.addOwnership(message, parser, gson);
+					onMapPage = true;
 				}
 
+				//Write JSON file
+				System.out.println(outMessage);
 
-
+				sendMessage(outMessage);
+								
 			}
-
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-	}
 
+			
+	}
+	
+	public void sendMessage(String msg) throws IOException {
+		pw.write(msg+"\n");
+		pw.flush();		
+	}
+	/*
+	 * atilacak mesajlar
+	 * 2) getDiscountsofStore
+	 * 3) getAllStores
+	 */
 }
