@@ -1,7 +1,10 @@
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import org.json.simple.JSONArray;
@@ -9,8 +12,22 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.util.List;
+import java.util.Scanner;
 
 public class Store {
+	
+	public static <T> ArrayList<T> getDataAsArrayList(String json, Class<T> className,Gson gson) {
+
+        Type type = TypeToken.getParameterized(List.class, className).getType();
+        ArrayList<T> data = gson.fromJson(json, type);
+
+        if (data != null)
+            return data;
+
+        return new ArrayList<>();
+    }
 
 	public int storeId;
 	public double storeLatitude;
@@ -35,9 +52,8 @@ public class Store {
 		this.storeAddress = address;
 	}
 	public static String createStore(String message, JSONParser parser, Gson gson) {
-
-		Store store = gson.fromJson(message, Store.class);  
-
+		
+		Store store = gson.fromJson(message, Store.class);
 
 		if(store.storeName != null) {
 			System.out.println(store.storeName);
@@ -56,7 +72,7 @@ public class Store {
 					file.write(jsonArray.toJSONString());
 					file.flush();
 					storeMutex.V();
-					DiscountServer.updateAllStores();
+			
 					return "101";
 
 				}
@@ -91,7 +107,7 @@ public class Store {
 						file.write(jsonArray.toJSONString());
 						file.flush();
 						storeMutex.V();
-						DiscountServer.updateAllStores();
+					
 						return "101";
 
 					}
@@ -242,7 +258,7 @@ public class Store {
 				file.write(discounts.toJSONString());
 				file.flush();
 				Discount.discountMutex.V();
-				DiscountServer.updateAllStores();
+				
 				return "108";
 
 			}
@@ -284,7 +300,7 @@ public class Store {
 
 				file.write(stores.toJSONString());
 				file.flush();
-				DiscountServer.updateAllStores();
+				
 				storeMutex.V();
 				return "109";
 

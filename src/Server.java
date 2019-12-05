@@ -22,7 +22,6 @@ public class Server extends Thread{
 	private static InputStreamReader isr;
 	private static String message;
 	private static PrintWriter pw;	
-	boolean onMapPage = false;
 	static JSONParser parser = new JSONParser();
 	
 	Server(Socket socket) {
@@ -31,21 +30,21 @@ public class Server extends Thread{
         	isr = new InputStreamReader(s.getInputStream());
 			br = new BufferedReader(isr);
 			pw = new PrintWriter(s.getOutputStream());
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
+	/**
+	 * 1) store ekleme
+	 * 2) 
+	 */
 	@Override 
 	public void run() {
-		
-		while(true) {
-						
+
 			try {
 				System.out.println("message is :");
-
+			
 				message = br.readLine();
 
 				System.out.println(message);
@@ -61,66 +60,58 @@ public class Server extends Thread{
 				
 				if(first.equals("100")) {
 					outMessage = Retailer.createRetailer(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.contentEquals("101")) {
 					outMessage = Store.createStore(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("102")) {
 					outMessage = Discount.createDiscount(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("103")) {
 					outMessage = Retailer.login(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("104")) {
 					outMessage = Store.getAllStores(parser, gson);
-					onMapPage = true;
 				}
 				else if(first.equals("105")) {
 					outMessage = Store.getStoresOfRetailer(message, parser, gson);
-					onMapPage = true;
 				}
 				else if(first.equals("106")) {
 					outMessage = Discount.getDiscountOfStore(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("107")) {
 					outMessage = Discount.deleteDiscount(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("108")) {
 					outMessage = Store.deleteStore(message, parser, gson);
-					onMapPage = false;
 				}
 				else if(first.equals("109")) {
 					outMessage = Store.addOwnership(message, parser, gson);
-					onMapPage = true;
 				}
 
 				//Write JSON file
 				System.out.println(outMessage);
 
+				//pw = new PrintWriter(s.getOutputStream());
 				sendMessage(outMessage);
-								
+				br.close();
+				s.close();
 			}
 			catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-
-			
 	}
 	
-	public void sendMessage(String msg) throws IOException {
+	public void sendMessage(String msg) {
 		pw.write(msg+"\n");
-		pw.flush();		
+		pw.flush();
+		pw.close();
+		
 	}
 	/*
 	 * atilacak mesajlar
+	 * 1) getStoresofRetailer
 	 * 2) getDiscountsofStore
 	 * 3) getAllStores
 	 */

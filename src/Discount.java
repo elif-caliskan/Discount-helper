@@ -168,6 +168,9 @@ public class Discount {
 				if(discount.discountId != discountMessage.discountId) {
 					discounts.add(jsonArray.get(i));
 				}
+				else if(!discount.discountProduct.equals(discountMessage.discountProduct)){
+					discounts.add(jsonArray.get(i));
+				}
 			}
 			
 			try (FileWriter file = new FileWriter("discounts.json")) {

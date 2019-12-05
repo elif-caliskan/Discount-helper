@@ -28,13 +28,5 @@ public class DiscountServer {
 			e.printStackTrace();
 		}
 	}
-	
-	public static void updateAllStores() throws IOException {
-        for (Server thread : threads) {
-            if (thread.isAlive() && thread.onMapPage) {
-            	thread.sendMessage("104");
-            }
-        }
-    }
 
 }
